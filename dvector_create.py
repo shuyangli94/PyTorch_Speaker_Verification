@@ -8,6 +8,7 @@ Created on Wed Dec 19 14:34:01 2018
 Creates "segment level d vector embeddings" compatible with
 https://github.com/google/uis-rnn
 
+python3 dvector_create.py
 """
 
 import glob
@@ -111,7 +112,11 @@ for i, folder in enumerate(audio_path):
     for ff in folder_files:
         if ff[-4:] in {'.wav', '.WAV'}:
             fpath =  os.path.join(folder, ff)
-            duration = str(timedelta(seconds=get_duration(fpath)))
+            try:
+                duration = str(timedelta(seconds=get_duration(fpath)))
+            except:
+                print('ERROR FOR FILE {}'.format(fpath))
+                raise
             times, segs = VAD_chunk(2, fpath)
             if segs == []:
                 print('No voice activity detected')
