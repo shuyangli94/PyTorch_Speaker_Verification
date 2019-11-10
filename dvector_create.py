@@ -77,6 +77,9 @@ audio_path = glob.glob(os.path.dirname(hp.unprocessed_data))
 
 total_speaker_num = len(audio_path)
 train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
+print('{:,} total speakers from {} - {:,} train'.format(
+    total_speaker_num, audio_path, train_speaker_num
+))
 
 # Load latest model
 model_dir = hp.model.model_path
@@ -85,6 +88,8 @@ latest_model_path = max(glob.glob(os.path.join(model_dir, '*')), key=os.path.get
 embedder_net = SpeechEmbedder()
 embedder_net.load_state_dict(torch.load(latest_model_path))
 embedder_net.eval()
+print('MODEL')
+print(embedder_net)
 
 train_sequence = []
 train_cluster_id = []
