@@ -20,9 +20,9 @@ def train(model_path):
     device = torch.device(hp.device)
     
     if hp.data.data_preprocessed:
-        train_dataset = SpeakerDatasetTIMITPreprocessed()
+        train_dataset = SpeakerDatasetTIMITPreprocessed(is_test=False)
     else:
-        train_dataset = SpeakerDatasetTIMIT()
+        train_dataset = SpeakerDatasetTIMIT(is_test=False)
     train_loader = DataLoader(train_dataset, batch_size=hp.train.N, shuffle=True, num_workers=hp.train.num_workers, drop_last=True) 
     
     embedder_net = SpeechEmbedder().to(device)
@@ -92,9 +92,9 @@ def train(model_path):
 def test(model_path):
     
     if hp.data.data_preprocessed:
-        test_dataset = SpeakerDatasetTIMITPreprocessed()
+        test_dataset = SpeakerDatasetTIMITPreprocessed(is_test=True)
     else:
-        test_dataset = SpeakerDatasetTIMIT()
+        test_dataset = SpeakerDatasetTIMIT(is_test=True)
     test_loader = DataLoader(test_dataset, batch_size=hp.test.N, shuffle=True, num_workers=hp.test.num_workers, drop_last=True)
     
     embedder_net = SpeechEmbedder()
@@ -176,7 +176,9 @@ if __name__=="__main__":
     )
 
     if is_test:
+        print('============ TESTING ==============')
         test(latest_model_path)
     else:
+        print('============ TRAINING ==============')
         train(latest_model_path)
 
