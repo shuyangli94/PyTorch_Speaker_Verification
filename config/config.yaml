@@ -1,4 +1,3 @@
-training: !!bool "false"
 device: "cuda"
 unprocessed_data: '/root/data4/TIMIT/data/lisa/data/timit/raw/TIMIT/*/*/*/*.wav'
 ---

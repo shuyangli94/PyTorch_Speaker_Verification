@@ -154,7 +154,29 @@ def test(model_path):
     print("\n EER across {0} epochs: {1:.4f}".format(hp.test.epochs, avg_EER))
         
 if __name__=="__main__":
-    if hp.training:
-        train(hp.model.model_path)
+    import glob
+    import os
+    import argparse
+
+    # Set up parser
+    parser = argparse.ArgumentParser(
+        description='Train speech embeddings.')
+    parser.add_argument("--test", '-T', action='store_true', default=False,
+                        help="Test model")
+    args = parser.parse_args()
+
+    # Parse arguments
+    is_test = args.test
+
+    # Load latest model
+    model_dir = hp.model.model_path
+    latest_model_path = os.path.join(
+        model_dir,
+        max(glob.glob(os.path.join(model_dir, '*')), key=os.path.getctime)
+    )
+
+    if is_test:
+        test(latest_model_path)
     else:
-        test(hp.model.model_path)
+        train(latest_model_path)
+
