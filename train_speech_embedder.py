@@ -170,10 +170,7 @@ if __name__=="__main__":
 
     # Load latest model
     model_dir = hp.model.model_path
-    latest_model_path = os.path.join(
-        model_dir,
-        max(glob.glob(os.path.join(model_dir, '*')), key=os.path.getctime)
-    )
+    latest_model_path = max(glob.glob(os.path.join(model_dir, '*')), key=os.path.getctime)
 
     if is_test:
         print('============ TESTING ==============')
