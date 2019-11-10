@@ -71,14 +71,19 @@ def align_embeddings(embeddings):
     for i, partition in enumerate(partitions):
         avg_embeddings[i] = np.average(embeddings[partition[0]:partition[1]],axis=0) 
     return avg_embeddings
+
 #dataset path
 audio_path = glob.glob(os.path.dirname(hp.unprocessed_data))  
 
 total_speaker_num = len(audio_path)
 train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
 
+# Load latest model
+model_dir = hp.model.model_path
+latest_model_path = max(glob.glob(os.path.join(model_dir, '*')), key=os.path.getctime)
+
 embedder_net = SpeechEmbedder()
-embedder_net.load_state_dict(torch.load(hp.model.model_path))
+embedder_net.load_state_dict(torch.load(latest_model_path))
 embedder_net.eval()
 
 train_sequence = []
