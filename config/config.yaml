@@ -1,12 +1,12 @@
-training: !!bool "true"
+training: !!bool "false"
 device: "cuda"
-unprocessed_data: './TIMIT/*/*/*/*.wav'
+unprocessed_data: '/root/data4/TIMIT/data/lisa/data/timit/raw/TIMIT/*/*/*/*.wav'
 ---
 data:
     train_path: './train_tisv'
-    train_path_unprocessed: './TIMIT/TRAIN/*/*/*.wav'
+    train_path_unprocessed: '/root/data4/TIMIT/data/lisa/data/timit/raw/TIMIT/TRAIN/*/*/*.wav'
     test_path: './test_tisv'
-    test_path_unprocessed: './TIMIT/TEST/*/*/*.wav'
+    test_path_unprocessed: '/root/data4/TIMIT/data/lisa/data/timit/raw/TIMIT/TEST/*/*/*.wav'
     data_preprocessed: !!bool "true" 
     sr: 16000
     nfft: 512 #For mel spectrogram preprocess
