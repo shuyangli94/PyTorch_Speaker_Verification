@@ -128,7 +128,11 @@ def vad_collector(sample_rate, frame_duration_ms,
 
 
 def VAD_chunk(aggressiveness, path):
-    audio, byte_audio = read_wave(path, hp.data.sr)
+    try:
+        audio, byte_audio = read_wave(path, hp.data.sr)
+    except:
+        print('ERROR WITH {}'.format(path))
+        raise
     vad = webrtcvad.Vad(int(aggressiveness))
     frames = frame_generator(20, byte_audio, hp.data.sr)
     frames = list(frames)
