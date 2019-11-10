@@ -138,7 +138,7 @@ def fix_wav(path):
     intermediate_path = path_stub + '_REPAIRED.wav'
     broken_path = path_stub + '.BROKEN'
     subprocess.call(
-        ['ffmpeg', 'i', path, intermediate_path],
+        ['ffmpeg', '-i', path, intermediate_path],
         shell=False, stdout=DEVNULL, stderr=DEVNULL)
     # Save old file but call it what it is
     os.rename(path, broken_path)
