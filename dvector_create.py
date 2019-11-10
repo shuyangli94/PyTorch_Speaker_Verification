@@ -73,12 +73,13 @@ def align_embeddings(embeddings):
     return avg_embeddings
 
 #dataset path
-audio_path = glob.glob(os.path.dirname(hp.unprocessed_data))  
+globdir = os.path.dirname(hp.unprocessed_data)
+audio_path = glob.glob(globdir)  
 
 total_speaker_num = len(audio_path)
 train_speaker_num= (total_speaker_num//10)*9            # split total data 90% train and 10% test
 print('{:,} total speakers from {} - {:,} train'.format(
-    total_speaker_num, audio_path, train_speaker_num
+    total_speaker_num, globdir, train_speaker_num
 ))
 
 # Load latest model
@@ -97,9 +98,13 @@ label = 0
 count = 0
 train_saved = False
 for i, folder in enumerate(audio_path):
-    for file in os.listdir(folder):
-        if file[-4:] == '.wav':
-            times, segs = VAD_chunk(2, folder+'/'+file)
+    folder_files = os.listdir(folder)
+    print('{:,} files in {}'.format(
+        len(folder_files), folder
+    ))
+    for ff in folder_files:
+        if ff[-4:] == '.wav':
+            times, segs = VAD_chunk(2, folder+'/'+ff)
             if segs == []:
                 print('No voice activity detected')
                 continue
