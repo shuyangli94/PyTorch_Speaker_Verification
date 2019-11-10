@@ -13,6 +13,9 @@ import numpy as np
 import sys
 import librosa
 import wave
+from wave import Error
+import subprocess
+from subprocess import DEVNULL
 
 import webrtcvad
 
@@ -126,12 +129,38 @@ def vad_collector(sample_rate, frame_duration_ms,
     if voiced_frames:
         yield (start, frame.timestamp + frame.duration)
 
+def fix_wav(path):
+    path_stub, _ = path.rsplit('.', 1)
+    intermediate_path = path_stub + '_REPAIRED.wav'
+    broken_path = path_stub + '.BROKEN'
+    subprocess.call(
+        [
+            'wavfix',
+            path
+        ],
+        shell=False,
+        stdout=DEVNULL,
+        stderr=DEVNULL
+    )
+    # Save old file but call it what it is
+    os.rename(path, broken_path)
+
+    # Fix with intermediate stuff
+    os.rename(intermediate_path, path)
 
 def VAD_chunk(aggressiveness, path):
     try:
         audio, byte_audio = read_wave(path, hp.data.sr)
+    except Error as e:
+        print('File {} broken! Fixing with wavfix...({})'.format(path, e))
+
+        try:
+            audio, byte_audio = read_wave(path, hp.data.sr)
+        except:
+            print('STILL ERROR WITH {}'.format(path))
+            raise
     except:
-        print('ERROR WITH {}'.format(path))
+        print('UNKNOWN ERROR WITH {}'.format(path))
         raise
     vad = webrtcvad.Vad(int(aggressiveness))
     frames = frame_generator(20, byte_audio, hp.data.sr)
