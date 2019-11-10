@@ -22,6 +22,10 @@ from librosa.core import get_duration
 from hparam import hparam as hp
 from speech_embedder_net import SpeechEmbedder
 from VAD_segments import VAD_chunk
+from utils import get_device, count_parameters
+from tqdm import tqdm
+
+USE_CUDA, DEVICE = get_device()
 
 
 def concat_segs(times, segs):
@@ -92,10 +96,12 @@ model_dir = hp.model.model_path
 latest_model_path = max(glob.glob(os.path.join(model_dir, '*')), key=os.path.getctime)
 print('Latest model from: {}'.format(latest_model_path))
 
-embedder_net = SpeechEmbedder()
+embedder_net = SpeechEmbedder().to(DEVICE)
 embedder_net.load_state_dict(torch.load(latest_model_path))
 embedder_net.eval()
-print('MODEL')
+print('MODEL with {:,} parameters'.format(
+    count_parameters(embedder_net)
+))
 print(embedder_net)
 
 train_sequence = []
@@ -106,43 +112,44 @@ train_saved = False
 debug = True
 for i, folder in enumerate(audio_path):
     folder_files = os.listdir(folder)
-    print('{:,} files in {}'.format(
-        len(folder_files), folder
-    ))
-    for ff in folder_files:
-        if ff[-4:] in {'.wav', '.WAV'}:
-            fpath =  os.path.join(folder, ff)
-            try:
-                duration = str(timedelta(seconds=get_duration(filename=fpath)))
-            except:
-                print('UNABLE TO GET DURATION FOR FILE {}'.format(fpath))
-                raise
-            times, segs = VAD_chunk(2, fpath)
-            if segs == []:
-                print('No voice activity detected')
-                continue
-            if debug:
-                print('{:,} segments for file {} of duration {}'.format(
-                    len(segs), fpath, duration
-                ))
+    try:
+        for ff in tqdm(folder_files, total=len(folder_files)):
+            if ff[-4:] in {'.wav', '.WAV'}:
+                fpath =  os.path.join(folder, ff)
+                try:
+                    duration = str(timedelta(seconds=get_duration(filename=fpath)))
+                except:
+                    print('UNABLE TO GET DURATION FOR FILE {}'.format(fpath))
+                    raise
+                times, segs = VAD_chunk(2, fpath)
+                if segs == []:
+                    print('No voice activity detected')
+                    continue
+                if debug:
+                    print('{:,} segments for file {} of duration {}'.format(
+                        len(segs), fpath, duration
+                    ))
 
-            concat_seg = concat_segs(times, segs)
-            STFT_frames = get_STFTs(concat_seg)
-            STFT_frames = np.stack(STFT_frames, axis=2)
-            STFT_frames = torch.tensor(np.transpose(STFT_frames, axes=(2,1,0)))
-            embeddings = embedder_net(STFT_frames)
-            aligned_embeddings = align_embeddings(embeddings.detach().numpy())
-            if debug:
-                print('{:,} partitions for file {} of duration {}'.format(
-                    len(aligned_embeddings), fpath, duration
-                ))
-                debug = False
-            train_sequence.append(aligned_embeddings)
-            for embedding in aligned_embeddings:
-                train_cluster_id.append(str(label))
-            count = count + 1
-            if count % 100 == 0:
-                print('Processed {0}/{1} files'.format(count, len(audio_path)))
+                concat_seg = concat_segs(times, segs)
+                STFT_frames = get_STFTs(concat_seg)
+                STFT_frames = np.stack(STFT_frames, axis=2)
+                STFT_frames = torch.tensor(np.transpose(STFT_frames, axes=(2,1,0))).to(DEVICE)
+                embeddings = embedder_net(STFT_frames)
+                aligned_embeddings = align_embeddings(embeddings.cpu().detach().numpy())
+                if debug:
+                    print('{:,} partitions for file {} of duration {}'.format(
+                        len(aligned_embeddings), fpath, duration
+                    ))
+                    debug = False
+                train_sequence.append(aligned_embeddings)
+                for embedding in aligned_embeddings:
+                    train_cluster_id.append(str(label))
+                count = count + 1
+                if count % 100 == 0:
+                    print('Processed {0}/{1} files'.format(count, len(audio_path)))
+    except:
+        print('ERROR AT FOLDER {}'.format(folder))
+        raise
     label = label + 1
 
     if not train_saved and i > train_speaker_num:
