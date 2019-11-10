@@ -1,2 +1,5 @@
 dvec_venv/
 __pycache__/
+
+# Saved d-vector sequences
+*.npy

@@ -186,8 +186,12 @@ with torch.no_grad():
         if not train_saved and lab > train_speaker_num:
             train_sequence = np.concatenate(train_sequence,axis=0)
             train_cluster_id = np.asarray(train_cluster_id)
-            np.save('train_sequence',train_sequence)
-            np.save('train_cluster_id',train_cluster_id)
+            print('TRAINING: {} shape sequence, {} shape cluster IDs'.format(
+                train_sequence.shape,
+                train_cluster_id.shape
+            ))
+            np.save('train_sequence', train_sequence)
+            np.save('train_cluster_id', train_cluster_id)
             train_saved = True
             train_sequence = []
             train_cluster_id = []
@@ -196,3 +200,7 @@ train_sequence = np.concatenate(train_sequence,axis=0)
 train_cluster_id = np.asarray(train_cluster_id)
 np.save('test_sequence',train_sequence)
 np.save('test_cluster_id',train_cluster_id)
+print('TEST: {} shape sequence, {} shape cluster IDs'.format(
+    train_sequence.shape,
+    train_cluster_id.shape
+))
