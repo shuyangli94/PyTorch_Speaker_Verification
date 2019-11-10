@@ -16,6 +16,8 @@ import numpy as np
 import os
 import torch
 
+from datetime import timedelta
+from librosa.core import get_duration
 from hparam import hparam as hp
 from speech_embedder_net import SpeechEmbedder
 from VAD_segments import VAD_chunk
@@ -58,6 +60,8 @@ def align_embeddings(embeddings):
     end = 0
     j = 1
     for i, embedding in enumerate(embeddings):
+        # Diarization window size is 240 ms - we partition into non-overlapping segments
+        # of 400ms max length
         if (i*.12)+.24 < j*.401:
             end = end + 1
         else:
@@ -98,6 +102,7 @@ train_cluster_id = []
 label = 0
 count = 0
 train_saved = False
+debug = True
 for i, folder in enumerate(audio_path):
     folder_files = os.listdir(folder)
     print('{:,} files in {}'.format(
@@ -105,16 +110,28 @@ for i, folder in enumerate(audio_path):
     ))
     for ff in folder_files:
         if ff[-4:] in {'.wav', '.WAV'}:
-            times, segs = VAD_chunk(2, os.path.join(folder, ff))
+            fpath =  os.path.join(folder, ff)
+            duration = str(timedelta(seconds=get_duration(fpath)))
+            times, segs = VAD_chunk(2, fpath)
             if segs == []:
                 print('No voice activity detected')
                 continue
+            if debug:
+                print('{:,} segments for file {} of duration {}'.format(
+                    len(segs), fpath, duration
+                ))
+
             concat_seg = concat_segs(times, segs)
             STFT_frames = get_STFTs(concat_seg)
             STFT_frames = np.stack(STFT_frames, axis=2)
             STFT_frames = torch.tensor(np.transpose(STFT_frames, axes=(2,1,0)))
             embeddings = embedder_net(STFT_frames)
             aligned_embeddings = align_embeddings(embeddings.detach().numpy())
+            if debug:
+                print('{:,} partitions for file {} of duration {}'.format(
+                    len(aligned_embeddings), fpath, duration
+                ))
+                debug = False
             train_sequence.append(aligned_embeddings)
             for embedding in aligned_embeddings:
                 train_cluster_id.append(str(label))
@@ -131,7 +148,7 @@ for i, folder in enumerate(audio_path):
         train_saved = True
         train_sequence = []
         train_cluster_id = []
-        
+
 train_sequence = np.concatenate(train_sequence,axis=0)
 train_cluster_id = np.asarray(train_cluster_id)
 np.save('test_sequence',train_sequence)
