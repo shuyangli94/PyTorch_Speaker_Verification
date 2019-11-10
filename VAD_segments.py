@@ -21,6 +21,7 @@ import webrtcvad
 
 from hparam import hparam as hp
 
+
 def read_wave(path, sr):
     """Reads a .wav file.
     Takes the path, and returns (PCM audio data, sample rate).
@@ -38,9 +39,11 @@ def read_wave(path, sr):
     assert len(data.shape) == 1
     assert sr in (8000, 16000, 32000, 48000)
     return data, pcm_data
-    
+
+
 class Frame(object):
     """Represents a "frame" of audio data."""
+
     def __init__(self, bytes, timestamp, duration):
         self.bytes = bytes
         self.timestamp = timestamp
@@ -63,8 +66,8 @@ def frame_generator(frame_duration_ms, audio, sample_rate):
         offset += n
 
 
-def vad_collector(sample_rate, frame_duration_ms,
-                  padding_duration_ms, vad, frames):
+def vad_collector(sample_rate, frame_duration_ms, padding_duration_ms, vad,
+                  frames):
     """Filters out non-voiced audio frames.
     Given a webrtcvad.Vad and a source of audio frames, yields only
     the voiced audio.
@@ -129,24 +132,20 @@ def vad_collector(sample_rate, frame_duration_ms,
     if voiced_frames:
         yield (start, frame.timestamp + frame.duration)
 
+
 def fix_wav(path):
     path_stub, _ = path.rsplit('.', 1)
     intermediate_path = path_stub + '_REPAIRED.wav'
     broken_path = path_stub + '.BROKEN'
     subprocess.call(
-        [
-            'wavfix',
-            path
-        ],
-        shell=False,
-        stdout=DEVNULL,
-        stderr=DEVNULL
-    )
+        ['ffmpeg', 'i', path, intermediate_path],
+        shell=False, stdout=DEVNULL, stderr=DEVNULL)
     # Save old file but call it what it is
     os.rename(path, broken_path)
 
     # Fix with intermediate stuff
     os.rename(intermediate_path, path)
+
 
 def VAD_chunk(aggressiveness, path):
     try:
@@ -170,18 +169,21 @@ def VAD_chunk(aggressiveness, path):
     speech_times = []
     speech_segs = []
     for i, time in enumerate(times):
-        start = np.round(time[0],decimals=2)
-        end = np.round(time[1],decimals=2)
+        start = np.round(time[0], decimals=2)
+        end = np.round(time[1], decimals=2)
         j = start
         while j + .4 < end:
-            end_j = np.round(j+.4,decimals=2)
+            end_j = np.round(j + .4, decimals=2)
             speech_times.append((j, end_j))
-            speech_segs.append(audio[int(j*hp.data.sr):int(end_j*hp.data.sr)])
+            speech_segs.append(
+                audio[int(j * hp.data.sr):int(end_j * hp.data.sr)])
             j = end_j
         else:
             speech_times.append((j, end))
-            speech_segs.append(audio[int(j*hp.data.sr):int(end*hp.data.sr)])
+            speech_segs.append(
+                audio[int(j * hp.data.sr):int(end * hp.data.sr)])
     return speech_times, speech_segs
+
 
 if __name__ == '__main__':
     speech_times, speech_segs = VAD_chunk(sys.argv[1], sys.argv[2])
