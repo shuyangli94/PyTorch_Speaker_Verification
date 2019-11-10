@@ -17,7 +17,7 @@ import numpy as np
 import os
 import torch
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from librosa.core import get_duration
 from hparam import hparam as hp
 from speech_embedder_net import SpeechEmbedder
@@ -125,35 +125,56 @@ n_files = len(audio_files)
 
 with torch.no_grad():
     for fpath, lab in tqdm(zip(audio_files, labels), total=n_files):
+        start = datetime.now()
+        if debug:
+            print('\n==== DEBUG ====')
+            print(fpath)
         try:
             duration = str(timedelta(seconds=get_duration(filename=fpath)))
+            if debug:
+                print('File duration: {}'.format(duration))
         except:
-            print('UNABLE TO GET DURATION FOR FILE {}'.format(fpath))
+            print('UNABLE TO GET DURATION')
             raise
+
         times, segs = VAD_chunk(2, fpath)
         if segs == []:
             print('No voice activity detected')
             continue
         if debug:
-            print('{:,} segments for file {} of duration {}'.format(
-                len(segs), fpath, duration
+            print('{} - {:,} segments'.format(
+                datetime.now() - start, len(segs)
             ))
 
         concat_seg = concat_segs(times, segs)
+        if debug:
+            print('{} - Concatenated segments'.format(
+                datetime.now() - start
+            ))
         STFT_frames = get_STFTs(concat_seg)
+        if debug:
+            print('{} - Got STFT frames'.format(
+                datetime.now() - start
+            ))
         STFT_frames = np.stack(STFT_frames, axis=2)
         STFT_frames = torch.tensor(np.transpose(STFT_frames, axes=(2,1,0))).to(DEVICE)
         embeddings = embedder_net(STFT_frames)
+        if debug:
+            print('{} - Embedded STFT frames'.format(
+                datetime.now() - start
+            ))
         aligned_embeddings = align_embeddings(embeddings.cpu().detach().numpy())
         if debug:
-            print('{:,} partitions for file {} of duration {}'.format(
-                len(aligned_embeddings), fpath, duration
+            print('{:,} partitions'.format(
+                len(aligned_embeddings)
             ))
-            debug = False
         train_sequence.append(aligned_embeddings)
         for embedding in aligned_embeddings:
             train_cluster_id.append(str(label))
+        
+        debug = False
         count = count + 1
+
         if count % 500 == 0:
             print('Processed {:,}/{:,} files'.format(count, n_files))
             debug = True
