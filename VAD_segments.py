@@ -23,7 +23,7 @@ def read_wave(path, sr):
     Takes the path, and returns (PCM audio data, sample rate).
     Assumes sample width == 2
     """
-    with contextlib.closing(wave.open(path, 'rb')) as wf:
+    with wave.open(path, 'rb') as wf:
         num_channels = wf.getnchannels()
         assert num_channels == 1
         sample_width = wf.getsampwidth()

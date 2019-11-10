@@ -104,7 +104,7 @@ for i, folder in enumerate(audio_path):
     ))
     for ff in folder_files:
         if ff[-4:].lower() == '.wav':
-            times, segs = VAD_chunk(2, folder+'/'+ff)
+            times, segs = VAD_chunk(2, os.path.join(folder, ff))
             if segs == []:
                 print('No voice activity detected')
                 continue
