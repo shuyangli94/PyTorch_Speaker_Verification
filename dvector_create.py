@@ -104,12 +104,8 @@ print('MODEL with {:,} parameters'.format(
 ))
 print(embedder_net)
 
-train_sequence = []
-train_cluster_id = []
+# Collapse files
 label = 0
-count = 0
-train_saved = False
-debug = True
 audio_files = []
 labels = []
 for i, folder in enumerate(audio_path):
@@ -124,6 +120,11 @@ for i, folder in enumerate(audio_path):
 n_files = len(audio_files)
 
 with torch.no_grad():
+    train_sequence = []
+    train_cluster_id = []
+    train_saved = False
+    debug = True
+    count = 0
     for fpath, lab in tqdm(zip(audio_files, labels), total=n_files):
         start = datetime.now()
         if debug:
@@ -172,10 +173,13 @@ with torch.no_grad():
         for embedding in aligned_embeddings:
             train_cluster_id.append(str(label))
         
-        debug = False
+        if debug:
+            print()
+            debug = False
+
         count = count + 1
 
-        if count % 500 == 0:
+        if count % 1000 == 0:
             print('Processed {:,}/{:,} files'.format(count, n_files))
             debug = True
 
