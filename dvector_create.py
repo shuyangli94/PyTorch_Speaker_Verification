@@ -85,6 +85,7 @@ print('{:,} total speakers from {} - {:,} train'.format(
 # Load latest model
 model_dir = hp.model.model_path
 latest_model_path = max(glob.glob(os.path.join(model_dir, '*')), key=os.path.getctime)
+print('Latest model from: {}'.format(latest_model_path))
 
 embedder_net = SpeechEmbedder()
 embedder_net.load_state_dict(torch.load(latest_model_path))
