@@ -123,48 +123,49 @@ for i, folder in enumerate(audio_path):
 
 n_files = len(audio_files)
 
-for fpath, lab in tqdm(zip(audio_files, labels), total=n_files):
-    try:
-        duration = str(timedelta(seconds=get_duration(filename=fpath)))
-    except:
-        print('UNABLE TO GET DURATION FOR FILE {}'.format(fpath))
-        raise
-    times, segs = VAD_chunk(2, fpath)
-    if segs == []:
-        print('No voice activity detected')
-        continue
-    if debug:
-        print('{:,} segments for file {} of duration {}'.format(
-            len(segs), fpath, duration
-        ))
+with torch.no_grad():
+    for fpath, lab in tqdm(zip(audio_files, labels), total=n_files):
+        try:
+            duration = str(timedelta(seconds=get_duration(filename=fpath)))
+        except:
+            print('UNABLE TO GET DURATION FOR FILE {}'.format(fpath))
+            raise
+        times, segs = VAD_chunk(2, fpath)
+        if segs == []:
+            print('No voice activity detected')
+            continue
+        if debug:
+            print('{:,} segments for file {} of duration {}'.format(
+                len(segs), fpath, duration
+            ))
 
-    concat_seg = concat_segs(times, segs)
-    STFT_frames = get_STFTs(concat_seg)
-    STFT_frames = np.stack(STFT_frames, axis=2)
-    STFT_frames = torch.tensor(np.transpose(STFT_frames, axes=(2,1,0))).to(DEVICE)
-    embeddings = embedder_net(STFT_frames)
-    aligned_embeddings = align_embeddings(embeddings.cpu().detach().numpy())
-    if debug:
-        print('{:,} partitions for file {} of duration {}'.format(
-            len(aligned_embeddings), fpath, duration
-        ))
-        debug = False
-    train_sequence.append(aligned_embeddings)
-    for embedding in aligned_embeddings:
-        train_cluster_id.append(str(label))
-    count = count + 1
-    if count % 500 == 0:
-        print('Processed {:,}/{:,} files'.format(count, n_files))
-        debug = True
+        concat_seg = concat_segs(times, segs)
+        STFT_frames = get_STFTs(concat_seg)
+        STFT_frames = np.stack(STFT_frames, axis=2)
+        STFT_frames = torch.tensor(np.transpose(STFT_frames, axes=(2,1,0))).to(DEVICE)
+        embeddings = embedder_net(STFT_frames)
+        aligned_embeddings = align_embeddings(embeddings.cpu().detach().numpy())
+        if debug:
+            print('{:,} partitions for file {} of duration {}'.format(
+                len(aligned_embeddings), fpath, duration
+            ))
+            debug = False
+        train_sequence.append(aligned_embeddings)
+        for embedding in aligned_embeddings:
+            train_cluster_id.append(str(label))
+        count = count + 1
+        if count % 500 == 0:
+            print('Processed {:,}/{:,} files'.format(count, n_files))
+            debug = True
 
-    if not train_saved and lab > train_speaker_num:
-        train_sequence = np.concatenate(train_sequence,axis=0)
-        train_cluster_id = np.asarray(train_cluster_id)
-        np.save('train_sequence',train_sequence)
-        np.save('train_cluster_id',train_cluster_id)
-        train_saved = True
-        train_sequence = []
-        train_cluster_id = []
+        if not train_saved and lab > train_speaker_num:
+            train_sequence = np.concatenate(train_sequence,axis=0)
+            train_cluster_id = np.asarray(train_cluster_id)
+            np.save('train_sequence',train_sequence)
+            np.save('train_cluster_id',train_cluster_id)
+            train_saved = True
+            train_sequence = []
+            train_cluster_id = []
 
 train_sequence = np.concatenate(train_sequence,axis=0)
 train_cluster_id = np.asarray(train_cluster_id)
