@@ -102,9 +102,8 @@ for i, folder in enumerate(audio_path):
     print('{:,} files in {}'.format(
         len(folder_files), folder
     ))
-    print(folder_files)
     for ff in folder_files:
-        if ff[-4:] == '.wav':
+        if ff[-4:].lower() == '.wav':
             times, segs = VAD_chunk(2, folder+'/'+ff)
             if segs == []:
                 print('No voice activity detected')
