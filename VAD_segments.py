@@ -6,7 +6,7 @@ Created on Tue Dec 18 16:22:41 2018
 @author: Harry
 Modified from https://github.com/wiseman/py-webrtcvad/blob/master/example.py
 """
-
+import os
 import collections
 import contextlib
 import numpy as np
@@ -153,6 +153,7 @@ def VAD_chunk(aggressiveness, path):
         audio, byte_audio = read_wave(path, hp.data.sr)
     except Error as e:
         print('File {} broken! Fixing with wavfix...({})'.format(path, e))
+        fix_wav(path)
 
         try:
             audio, byte_audio = read_wave(path, hp.data.sr)
