@@ -113,9 +113,9 @@ for i, folder in enumerate(audio_path):
         if ff[-4:] in {'.wav', '.WAV'}:
             fpath =  os.path.join(folder, ff)
             try:
-                duration = str(timedelta(seconds=get_duration(fpath)))
+                duration = str(timedelta(seconds=get_duration(filename=fpath)))
             except:
-                print('ERROR FOR FILE {}'.format(fpath))
+                print('UNABLE TO GET DURATION FOR FILE {}'.format(fpath))
                 raise
             times, segs = VAD_chunk(2, fpath)
             if segs == []:
