@@ -156,7 +156,7 @@ if __name__=="__main__":
             start = datetime.now()
 
             # Get speaker ID
-            split, _, speaker, _ = fpath.split(os.sep)[:-4]
+            split, _, speaker, _ = fpath.split(os.sep)[-4:]
             if speaker in all_speakers:
                 speaker_id = all_speakers.index(speaker)
             else:
