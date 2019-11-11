@@ -233,16 +233,16 @@ for split, seq in sequences.items():
     # Save sequence
     seq_loc = os.path.join(out_dir, '{}_sequence.npy'.format(split))
     np.save(seq_loc, seq)
-    print('{}: {} shape sequence ({:,.3f} MB) at {}'.format(
-        split, seq.shape, os.path.getsize(seq_loc) / 1024 / 1024, seq_loc
+    print('{}: array of sequences (e.g. first one shape {}) ({:,.3f} MB) at {}'.format(
+        split, seq[0].shape, os.path.getsize(seq_loc) / 1024 / 1024, seq_loc
     ))
 
     # Save cluster IDs
     clusters_loc = os.path.join(out_dir, '{}_cluster_id.npy'.format(split))
-    clusters_save = np.asarray(cluster_ids[split])
+    clusters_save = cluster_ids[split]
     np.save(clusters_loc, clusters_save)
-    print('{}: {} shape cluster IDs ({:,.3f} MB) at {}'.format(
-        split, clusters_save.shape, os.path.getsize(clusters_loc) / 1024 / 1024, clusters_loc
+    print('{}: e.g. {} shape cluster IDs ({:,.3f} MB) at {}'.format(
+        split, clusters_save[0].shape, os.path.getsize(clusters_loc) / 1024 / 1024, clusters_loc
     ))
 
 print('\n\n== DONE ==')
