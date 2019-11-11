@@ -110,7 +110,7 @@ if __name__=="__main__":
         help='Model checkpoint directory')
     parser.add_argument(
         '--out-dir', type=str,
-        default='/data4/shuyang/TIMIT_dvec',
+        default='/data4/shuyang/TIMIT_spk',
         help='Output directory',
     )
     args = parser.parse_args()
@@ -232,10 +232,9 @@ if __name__=="__main__":
 for split, seq in sequences.items():
     # Save sequence
     seq_loc = os.path.join(out_dir, '{}_sequence.npy'.format(split))
-    seq_save = np.concatenate(seq, axis=0)
-    np.save(seq_loc, seq_save)
+    np.save(seq_loc, seq)
     print('{}: {} shape sequence ({:,.3f} MB) at {}'.format(
-        split, seq_save.shape, os.path.getsize(seq_loc) / 1024 / 1024, seq_loc
+        split, seq.shape, os.path.getsize(seq_loc) / 1024 / 1024, seq_loc
     ))
 
     # Save cluster IDs
