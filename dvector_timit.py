@@ -217,7 +217,7 @@ if __name__=="__main__":
 
             # Store into sequences and cluster labels
             sequences[split].append(aligned_embeddings)
-            cluster_ids[split].extend([speaker_id] * len(aligned_embeddings))
+            cluster_ids[split].append(np.array([speaker_id] * len(aligned_embeddings)))
             
             if debug:
                 print()
