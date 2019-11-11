@@ -218,7 +218,7 @@ if __name__=="__main__":
             # Store into sequences and cluster labels
             sequences[split].append(aligned_embeddings)
             cluster_ids[split].append(np.array([speaker_id] * len(aligned_embeddings)))
-            
+
             if debug:
                 print()
                 debug = False
@@ -229,9 +229,13 @@ if __name__=="__main__":
                 print('Processed {:,}/{:,} files'.format(count, n_files))
                 debug = True
 
+# Save splits
+all_seq = []
+all_clusters = []
 for split, seq in sequences.items():
     # Save sequence
     seq_loc = os.path.join(out_dir, '{}_sequence.npy'.format(split))
+    all_seq.extend(seq)
     np.save(seq_loc, seq)
     print('{}: array of sequences (e.g. first one shape {}) ({:,.3f} MB) at {}'.format(
         split, seq[0].shape, os.path.getsize(seq_loc) / 1024 / 1024, seq_loc
@@ -240,9 +244,25 @@ for split, seq in sequences.items():
     # Save cluster IDs
     clusters_loc = os.path.join(out_dir, '{}_cluster_id.npy'.format(split))
     clusters_save = cluster_ids[split]
+    all_clusters.extend(clusters_save)
     np.save(clusters_loc, clusters_save)
     print('{}: e.g. {} shape cluster IDs ({:,.3f} MB) at {}'.format(
         split, clusters_save[0].shape, os.path.getsize(clusters_loc) / 1024 / 1024, clusters_loc
     ))
+
+# Save ALL data
+# Save sequence
+seq_loc = os.path.join(out_dir, 'ALL_sequence.npy')
+np.save(seq_loc, all_seq)
+print('ALL: array of sequences (e.g. first one shape {}) ({:,.3f} MB) at {}'.format(
+    all_seq[0].shape, os.path.getsize(seq_loc) / 1024 / 1024, seq_loc
+))
+
+# Save cluster IDs
+clusters_loc = os.path.join(out_dir, 'ALL_cluster_id.npy')
+np.save(clusters_loc, all_clusters)
+print('ALL: e.g. {} shape cluster IDs ({:,.3f} MB) at {}'.format(
+    all_clusters[0].shape, os.path.getsize(clusters_loc) / 1024 / 1024, clusters_loc
+))
 
 print('\n\n== DONE ==')
